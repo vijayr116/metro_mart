@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:metro_mart/pages/home.dart';
 
 import 'package:metro_mart/pages/sign_up.dart';
-import 'package:metro_mart/providers/user_provider.dart';
+import 'package:metro_mart/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,29 +15,11 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
-  @override
-  void initState() {
-    super.initState();
-    context.read<UserProvider>().loadData();
-  }
-
-  void fetchData() async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/get');
-    try {
-      // Sending a GET request to the URL
-      final response = await http.get(url);
-      // Checking if the request was successful
-      if (response.statusCode == 200) {
-        // Decoding the JSON response
-        final data = json.decode(response.body);
-        print('Data fetched: $data');
-      } else {
-        print('Request failed with status: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Error: $e');
-    }
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   context.read<UserProvider>().logout();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                                   builder: ((context) => const SignUp())));
                         },
                         child: const Text(
-                          "Register Here",
+                          "Register Now",
                           style: TextStyle(color: Colors.blue),
                         ),
                       ),
@@ -114,38 +94,68 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(
                     height: 30,
                   ),
-                  Consumer<UserProvider>(
-                    builder: (context, value, child) => GestureDetector(
-                      onTap: () {
-                        if (_formKey.currentState?.validate() ?? false) {
-                          // Perform login action
-                          final username = _usernameController.text;
-                          final password = _passwordController.text;
-                          // Handle authentication logic here
-                          print('Username: $username');
-                          print('Password: $password');
-                          // value.loadData(username, password);
-                          for (var name in value.users) {
-                            if (name['name'] == username) {
-                              print("=========Can Naviagate to Home=========");
-                              break;
-                            } else {
-                              print("Authentication failed");
-                            }
+                  // Consumer<AuthProvider>(
+                  //   builder: (context, value, child) => GestureDetector(
+                  //     onTap: () {
+                  //       if (_formKey.currentState?.validate() ?? false) {
+                  //         final username = _usernameController.text;
+                  //         final password = _passwordController.text;
+                  //         print('Username: $username');
+                  //         print('Password: $password');
+                  //         value.login(username, password);
+                  //         if (value.isAuthenticate == true) {
+                  //           Navigator.push(
+                  //               context,
+                  //               MaterialPageRoute(
+                  //                   builder: (context) => const HomePage()));
+                  //         }
+                  //       }
+                  //     },
+                  //     child: Container(
+                  //       color: Colors.black87,
+                  //       width: 130,
+                  //       height: 30,
+                  //       alignment: Alignment.center,
+                  //       child: const Text(
+                  //         "Log In",
+                  //         style: TextStyle(color: Colors.white),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
+
+                  Consumer<AuthProvider>(
+                    builder: (context, value, child) {
+                      if (value.isAuthenticate) {
+                        Future.microtask(() => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const HomePage())));
+                      }
+                      return GestureDetector(
+                        onTap: () {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            final username = _usernameController.text;
+                            final password = _passwordController.text;
+                            print('Username: $username');
+                            print('Password: $password');
+                            value.login(username, password);
                           }
-                        }
-                      },
-                      child: Container(
-                        color: Colors.black87,
-                        width: 130,
-                        height: 30,
-                        alignment: Alignment.center,
-                        child: const Text(
-                          "Log In",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
+                        },
+                        child: value.isLoading
+                            ? const CircularProgressIndicator()
+                            : Container(
+                                color: Colors.black87,
+                                width: 130,
+                                height: 30,
+                                alignment: Alignment.center,
+                                child: const Text(
+                                  "Log In",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                      );
+                    },
                   ),
                 ],
               ),
