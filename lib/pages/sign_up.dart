@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:metro_mart/pages/home.dart';
 import 'package:metro_mart/pages/login.dart';
+import 'package:metro_mart/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -15,6 +18,8 @@ class _SignUpState extends State<SignUp> {
   final _dobController = TextEditingController();
   final _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+
+  bool _obscureText = true;
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -71,9 +76,24 @@ class _SignUpState extends State<SignUp> {
                   ),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(
-                        labelText: 'Password', icon: Icon(Icons.lock)),
-                    obscureText: true,
+                    obscureText: _obscureText, // Use the boolean for visibility
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      icon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureText
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: Colors.grey,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureText = !_obscureText;
+                          });
+                        },
+                      ),
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your password';
@@ -86,30 +106,30 @@ class _SignUpState extends State<SignUp> {
                     decoration: const InputDecoration(
                         labelText: 'Gender', icon: Icon(Icons.person)),
                     obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                    // validator: (value) {
+                    //   if (value == null || value.isEmpty) {
+                    //     return 'Please enter your password';
+                    //   }
+                    //   return null;
+                    // },
                   ),
                   TextFormField(
                     controller: _emailController,
                     decoration: const InputDecoration(
                         labelText: 'Email Id', icon: Icon(Icons.email)),
                     obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your Email Id';
-                      }
-                      return null;
-                    },
+                    // validator: (value) {
+                    //   if (value == null || value.isEmpty) {
+                    //     return 'Please enter your Email Id';
+                    //   }
+                    //   return null;
+                    // },
                   ),
                   TextFormField(
                     controller: _dobController,
                     decoration: const InputDecoration(
                       icon: Icon(Icons.calendar_today),
-                      labelText: "Select Date",
+                      labelText: "Date of birth",
                     ),
                     readOnly: true, // Prevents editing of the text field
                     onTap: () => _selectDate(context),
@@ -117,36 +137,113 @@ class _SignUpState extends State<SignUp> {
                   const SizedBox(
                     height: 30,
                   ),
+
+                  Consumer<AuthProvider>(
+                    builder: (context, value, child) {
+                      if (value.isSignInAuthenticate) {
+                        Future.microtask(() => Navigator.pop(context));
+                      }
+                      return GestureDetector(
+                        onTap: () {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            final username = _usernameController.text;
+                            final password = _passwordController.text;
+                            print('Username: $username');
+                            print('Password: $password');
+                            value.register(username, password);
+                          }
+                        },
+                        child: Container(
+                            color: Colors.black87,
+                            width: 180,
+                            height: 30,
+                            alignment: Alignment.center,
+                            child: value.isSingLoading
+                                ? const Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 1,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text(
+                                        'Registering...',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ],
+                                  )
+                                : const Text(
+                                    "Register",
+                                    style: TextStyle(color: Colors.white),
+                                  )),
+                      );
+                    },
+                  ),
+                  // Consumer<AuthProvider>(
+                  //   builder: (context, value, child) {
+                  //     if (value.isAuthenticate) {
+                  //       Future.microtask(() => Navigator.pushReplacement(
+                  //           context,
+                  //           MaterialPageRoute(
+                  //               builder: (context) => LoginPage())));
+                  //     }
+
+                  //     return GestureDetector(
+                  //       onTap: () {
+                  //         if (_formKey.currentState?.validate() ?? false) {
+                  //           // Perform login action
+                  //           final username = _usernameController.text;
+                  //           final password = _passwordController.text;
+                  //           final dob = _dobController.text;
+                  //           final email = _emailController.text;
+                  //           final gender = _genderController.text;
+
+                  //           // Handle authentication logic here
+                  //           print('Username: $username');
+                  //           print('Password: $password');
+                  //           print('Username: $dob');
+                  //           print('Password: $email');
+                  //           print('Username: $gender');
+                  //           value.register(username, password);
+                  //           // Navigator.pop(context);
+                  //         }
+                  //         // fetchData();
+                  //       },
+                  //       child: Container(
+                  //         color: Colors.black87,
+                  //         width: 130,
+                  //         height: 30,
+                  //         alignment: Alignment.center,
+                  //         child: const Text(
+                  //           "Sign Up",
+                  //           style: TextStyle(color: Colors.white),
+                  //         ),
+                  //       ),
+                  //     );
+                  //   },
+                  // ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
                   GestureDetector(
                     onTap: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        // Perform login action
-                        final username = _usernameController.text;
-                        final password = _passwordController.text;
-                        final dob = _dobController.text;
-                        final email = _emailController.text;
-                        final gender = _genderController.text;
-
-                        // Handle authentication logic here
-                        print('Username: $username');
-                        print('Password: $password');
-                        print('Username: $dob');
-                        print('Password: $email');
-                        print('Username: $gender');
-
-                        Navigator.pop(context);
-                      }
-                      // fetchData();
+                      Navigator.pop(
+                          context,
+                          MaterialPageRoute(
+                              builder: ((context) => LoginPage())));
                     },
-                    child: Container(
-                      color: Colors.black87,
-                      width: 130,
-                      height: 30,
-                      alignment: Alignment.center,
-                      child: const Text(
-                        "Sign Up",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                    child: const Text(
+                      "Already have an account?",
+                      style:
+                          TextStyle(color: Color.fromARGB(255, 111, 173, 223)),
                     ),
                   ),
                 ],
